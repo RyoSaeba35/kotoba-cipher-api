@@ -1,0 +1,19 @@
+# config/database.yml
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: kotoba_cipher_api_development
+
+test:
+  <<: *default
+  database: kotoba_cipher_api_test
+
+production:
+  <<: *default
+  url: <%= ENV['DATABASE_URL'] %>
+  pool: 5
+  checkout_timeout: 5

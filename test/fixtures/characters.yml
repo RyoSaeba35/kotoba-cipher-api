@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  name_japanese: MyString
+  bio: MyText
+  voice_actor: MyString
+  voice_actor_japanese: MyString
+  anime: one
+
+two:
+  name: MyString
+  name_japanese: MyString
+  bio: MyText
+  voice_actor: MyString
+  voice_actor_japanese: MyString
+  anime: two

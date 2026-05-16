@@ -1,0 +1,31 @@
+app = 'kotoba-cipher-api'
+primary_region = 'cdg'
+
+[build]
+
+[deploy]
+  release_command = 'bin/rails db:migrate'
+
+[env]
+  RAILS_ENV = 'production'
+  RAILS_LOG_TO_STDOUT = 'true'
+  RAILS_SERVE_STATIC_FILES = 'true'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '10s'        # Increased from 5s
+    grace_period = '30s'   # Increased from 10s
+    method = 'GET'
+    path = '/up'
+
+[[vm]]
+  memory = '1024mb'  # Increased from 512mb
+  cpu_kind = 'shared'
+  cpus = 1

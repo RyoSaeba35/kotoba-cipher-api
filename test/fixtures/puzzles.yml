@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  solution: MyText
+  encrypted_text: MyText
+  topic: MyString
+  difficulty: MyString
+  cipher_mapping: 
+  starting_letters: 
+  points: 1
+  time_limit: 1
+  featured_date: 2026-05-15
+  anime: one
+  character: one
+  author: one
+
+two:
+  solution: MyText
+  encrypted_text: MyText
+  topic: MyString
+  difficulty: MyString
+  cipher_mapping: 
+  starting_letters: 
+  points: 1
+  time_limit: 1
+  featured_date: 2026-05-15
+  anime: two
+  character: two
+  author: two

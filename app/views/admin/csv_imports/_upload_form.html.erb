@@ -1,0 +1,168 @@
+<style>
+  .csv-upload-form {
+    background: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+
+  .upload-section {
+    background: white;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 6px;
+    border: 2px solid #e0e0e0;
+  }
+
+  .upload-section:hover {
+    border-color: #5B9BD5;
+  }
+
+  .upload-section h3 {
+    margin-top: 0;
+    color: #333;
+  }
+
+  .file-input-wrapper {
+    margin: 15px 0;
+  }
+
+  .btn-upload {
+    background: #5B9BD5;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  .btn-upload:hover {
+    background: #4A8BC2;
+  }
+
+  .btn-export {
+    background: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    text-decoration: none;
+    display: inline-block;
+    margin-left: 10px;
+  }
+
+  .btn-export:hover {
+    background: #218838;
+    color: white;
+  }
+
+  .icon {
+    font-size: 24px;
+    margin-right: 10px;
+  }
+
+  .description {
+    color: #666;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+
+  .button-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+</style>
+
+<div class="csv-upload-form">
+  <div style="margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 6px;">
+    <strong>📥 Download Templates:</strong><br>
+    <%= link_to "authors_template.csv", admin_csv_import_download_template_path(type: 'authors') %> |
+    <%= link_to "animes_template.csv", admin_csv_import_download_template_path(type: 'animes') %> |
+    <%= link_to "characters_template.csv", admin_csv_import_download_template_path(type: 'characters') %> |
+    <%= link_to "puzzles_template.csv", admin_csv_import_download_template_path(type: 'puzzles') %>
+  </div>
+
+  <!-- Authors Upload/Export -->
+  <div class="upload-section">
+    <%= form_tag admin_csv_import_upload_path, multipart: true do %>
+      <h3><span class="icon">👤</span> Import Authors</h3>
+      <p class="description">
+        Upload a CSV file containing author information (name, bio, image_url, wikipedia_url)
+      </p>
+      <div class="file-input-wrapper">
+        <%= file_field_tag :csv_file, accept: '.csv' %>
+        <%= hidden_field_tag :file_type, 'authors' %>
+      </div>
+      <div class="button-group">
+        <%= submit_tag 'Upload Authors', class: 'btn-upload' %>
+        <%= link_to '📥 Export Current Authors', admin_csv_import_export_path(type: 'authors'), class: 'btn-export' %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Animes Upload/Export -->
+  <div class="upload-section">
+    <%= form_tag admin_csv_import_upload_path, multipart: true do %>
+      <h3><span class="icon">📺</span> Import Animes</h3>
+      <p class="description">
+        Upload a CSV file containing anime/manga information (title, creator, studio, year, type)
+      </p>
+      <div class="file-input-wrapper">
+        <%= file_field_tag :csv_file, accept: '.csv' %>
+        <%= hidden_field_tag :file_type, 'animes' %>
+      </div>
+      <div class="button-group">
+        <%= submit_tag 'Upload Animes', class: 'btn-upload' %>
+        <%= link_to '📥 Export Current Animes', admin_csv_import_export_path(type: 'animes'), class: 'btn-export' %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Characters Upload/Export -->
+  <div class="upload-section">
+    <%= form_tag admin_csv_import_upload_path, multipart: true do %>
+      <h3><span class="icon">👥</span> Import Characters</h3>
+      <p class="description">
+        Upload a CSV file containing character information (name, anime_title, voice_actor)
+        <br><strong>Note:</strong> Animes must be imported first!
+      </p>
+      <div class="file-input-wrapper">
+        <%= file_field_tag :csv_file, accept: '.csv' %>
+        <%= hidden_field_tag :file_type, 'characters' %>
+      </div>
+      <div class="button-group">
+        <%= submit_tag 'Upload Characters', class: 'btn-upload' %>
+        <%= link_to '📥 Export Current Characters', admin_csv_import_export_path(type: 'characters'), class: 'btn-export' %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Puzzles Upload/Export -->
+  <div class="upload-section">
+    <%= form_tag admin_csv_import_upload_path, multipart: true do %>
+      <h3><span class="icon">🧩</span> Import Puzzles</h3>
+      <p class="description">
+        Upload a CSV file containing puzzle information (solution, anime_title, character_name, difficulty)
+        <br><strong>Note:</strong> Animes and Characters must be imported first!
+      </p>
+      <div class="file-input-wrapper">
+        <%= file_field_tag :csv_file, accept: '.csv' %>
+        <%= hidden_field_tag :file_type, 'puzzles' %>
+      </div>
+      <div class="button-group">
+        <%= submit_tag 'Upload Puzzles', class: 'btn-upload' %>
+        <%= link_to '📥 Export Current Puzzles', admin_csv_import_export_path(type: 'puzzles'), class: 'btn-export' %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 6px;">
+  <strong>💡 Pro Tip:</strong> Export your current data, edit it in Google Sheets or Excel,
+  then re-import to bulk update. Import in order: Authors → Animes → Characters → Puzzles
+</div>
