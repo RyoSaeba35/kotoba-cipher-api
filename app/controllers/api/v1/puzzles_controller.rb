@@ -6,7 +6,7 @@ module Api
       def index
         @puzzles = Puzzle.includes(:anime, :character, :author)
                          .recent
-                         .limit(50)
+                         .limit(25)
 
         render json: @puzzles.map { |p| puzzle_json(p) }
       end
@@ -32,8 +32,8 @@ module Api
 
       # GET /api/v1/puzzles/bundle
       def bundle
-        # Cap limit to prevent abuse (max 100 per request)
-        limit = [params[:limit].to_i.positive? ? params[:limit].to_i : 100, 100].min
+        # Cap limit to prevent abuse (max 25 per request)
+        limit = [params[:limit].to_i.positive? ? params[:limit].to_i : 25, 25].min
 
         puzzles = Puzzle.includes(:anime, :character, :author).order(:id)
         puzzles = puzzles.where('id > ?', params[:after_id].to_i) if params[:after_id].present?
