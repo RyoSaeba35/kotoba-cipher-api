@@ -41,7 +41,7 @@ class CsvImportService
         anime.studio         = row['studio']
         anime.year           = row['year'].to_i
         anime.anime_type     = row['anime_type']
-        anime.image_url      = row['image_url']  # ← added
+        anime.image_url      = row['image_url']
         count += 1
       end
     end
@@ -65,7 +65,7 @@ class CsvImportService
         character.voice_actor          = row['voice_actor']
         character.voice_actor_japanese = row['voice_actor_japanese']
         character.bio                  = row['bio']
-        character.image_url            = row['image_url']  # ← added
+        character.image_url            = row['image_url']
         count += 1
       end
     end
@@ -74,7 +74,7 @@ class CsvImportService
     { count: count, message: message }
   end
 
-  # app/services/csv_import_service.rb
+  # ✅ UPDATED: Multilanguage support
   def self.import_puzzles(file_path)
     count = 0
     skipped = 0
@@ -92,18 +92,44 @@ class CsvImportService
       character = Character.find_by(name: row['character_name'])
       author    = row['author_name'].present? ? Author.find_by(name: row['author_name']) : nil
 
-      # ✅ Normalize solution (model will handle it in before_create, but check here for duplicates)
-      normalized_solution = row['solution'].strip.upcase
+      # ✅ Build solutions hash from CSV columns
+      solutions_hash = {}
 
-      existing = Puzzle.find_by(solution: normalized_solution, anime: anime)
-      if existing
+      # English (required)
+      if row['solution_en'].present?
+        solutions_hash['en'] = row['solution_en'].strip.upcase
+      elsif row['solution'].present?  # Backwards compatibility
+        solutions_hash['en'] = row['solution'].strip.upcase
+      else
+        errors << "Line #{line_number}: Missing English solution"
+        next
+      end
+
+      # French (optional)
+      solutions_hash['fr'] = row['solution_fr'].strip.upcase if row['solution_fr'].present?
+
+      # Spanish (optional)
+      solutions_hash['es'] = row['solution_es'].strip.upcase if row['solution_es'].present?
+
+      # German (optional)
+      solutions_hash['de'] = row['solution_de'].strip.upcase if row['solution_de'].present?
+
+      # Italian (optional)
+      solutions_hash['it'] = row['solution_it'].strip.upcase if row['solution_it'].present?
+
+      # Portuguese (optional)
+      solutions_hash['pt'] = row['solution_pt'].strip.upcase if row['solution_pt'].present?
+
+      # Check for duplicates (use English solution)
+      existing = Puzzle.find_by("solutions->>'en' = ?", solutions_hash['en'])
+      if existing && existing.anime_id == anime.id
         skipped += 1
         next
       end
 
-      # ✅ Model callbacks will auto-generate cipher, starting letters, and hints
+      # ✅ Create puzzle with multilanguage solutions
       Puzzle.create!(
-        solution:      row['solution'],  # ✅ Pass as-is, model normalizes it
+        solutions:     solutions_hash,  # ✅ JSONB with all languages
         anime:         anime,
         character:     character,
         author:        author,
@@ -112,7 +138,8 @@ class CsvImportService
         points:        row['points'].to_i.positive? ? row['points'].to_i : 100,
         artwork:       row['artwork'],
         video_url:     row['video_url'],
-        featured_date: row['featured_date'].present? ? Date.parse(row['featured_date']) : nil
+        featured_date: row['featured_date'].present? ? Date.parse(row['featured_date']) : nil,
+        default_locale: 'en'
       )
 
       count += 1

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_16_091009) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_20_152101) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,17 +48,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_16_091009) do
     t.string "studio"
     t.string "title"
     t.string "title_japanese"
+    t.jsonb "titles", default: {}
     t.datetime "updated_at", null: false
     t.integer "year"
+    t.index ["titles"], name: "index_animes_on_titles", using: :gin
   end
 
   create_table "authors", force: :cascade do |t|
     t.text "bio"
+    t.jsonb "bios", default: {}
     t.datetime "created_at", null: false
     t.string "image_url"
     t.string "name"
     t.datetime "updated_at", null: false
     t.string "wikipedia_url"
+    t.index ["bios"], name: "index_authors_on_bios", using: :gin
   end
 
   create_table "characters", force: :cascade do |t|
@@ -68,10 +72,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_16_091009) do
     t.string "image_url"
     t.string "name"
     t.string "name_japanese"
+    t.jsonb "names", default: {}
     t.datetime "updated_at", null: false
     t.string "voice_actor"
     t.string "voice_actor_japanese"
     t.index ["anime_id"], name: "index_characters_on_anime_id"
+    t.index ["names"], name: "index_characters_on_names", using: :gin
   end
 
   create_table "puzzles", force: :cascade do |t|
@@ -80,14 +86,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_16_091009) do
     t.bigint "author_id"
     t.bigint "character_id"
     t.jsonb "cipher_mapping", default: {}
+    t.jsonb "cipher_mappings_i18n", default: {}
     t.datetime "created_at", null: false
+    t.string "default_locale", default: "en"
     t.string "difficulty", default: "medium"
     t.text "encrypted_text"
+    t.jsonb "encrypted_texts", default: {}
     t.date "featured_date"
     t.jsonb "hints", default: []
+    t.jsonb "hints_i18n", default: {}
     t.integer "points", default: 100
     t.text "solution", null: false
+    t.jsonb "solutions", default: {}
     t.jsonb "starting_letters", default: []
+    t.jsonb "starting_letters_i18n", default: {}
     t.integer "time_limit"
     t.string "topic"
     t.datetime "updated_at", null: false
@@ -98,8 +110,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_16_091009) do
     t.index ["author_id"], name: "index_puzzles_on_author_id"
     t.index ["character_id"], name: "index_puzzles_on_character_id"
     t.index ["created_at"], name: "index_puzzles_on_created_at"
+    t.index ["default_locale"], name: "index_puzzles_on_default_locale"
     t.index ["difficulty"], name: "index_puzzles_on_difficulty"
     t.index ["featured_date"], name: "index_puzzles_on_featured_date"
+    t.index ["solutions"], name: "index_puzzles_on_solutions", using: :gin
   end
 
   add_foreign_key "characters", "animes"

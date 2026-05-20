@@ -5,16 +5,37 @@ class Character < ApplicationRecord
 
   validates :name, presence: true
 
+  # ✅ Get name for specific locale
+  def name_for(locale)
+    names[locale.to_s] || names['en'] || name
+  end
+
+  # ✅ Check if locale is available
+  def locale_available?(locale)
+    names.present? && names.key?(locale.to_s)
+  end
+
+  # ✅ Available locales for this character
+  def available_locales
+    names.present? ? names.keys : []
+  end
+
+  # ✅ Add translation for new locale
+  def add_translation!(locale, name_text)
+    self.names = (names || {}).merge(locale => name_text.strip)
+    save!
+  end
+
   # Ransack configuration
   def self.ransackable_attributes(auth_object = nil)
     [
       "name", "name_japanese", "bio", "voice_actor", "voice_actor_japanese",
-      "anime_id",  # ← ADD THIS! (foreign key for belongs_to)
+      "anime_id",
       "created_at", "updated_at"
     ]
   end
 
   def self.ransackable_associations(auth_object = nil)
-    ["anime"]  # Keep belongs_to, remove has_many
+    ["anime"]
   end
 end

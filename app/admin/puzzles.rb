@@ -1,25 +1,27 @@
 # app/admin/puzzles.rb
 ActiveAdmin.register Puzzle do
 
-  # ✅ Fix N+1 queries
   controller do
     def scoped_collection
       super.includes(:anime, :character, :author)
     end
   end
 
+  # ✅ Add multilanguage fields to permit_params
   permit_params :solution, :topic, :difficulty, :artwork, :points,
                 :anime_id, :character_id, :author_id,
                 :video_url, :video_thumbnail_url, :video_duration,
-                :featured_date
-                # ❌ background_image_url removed — now on anime
-                # ❌ character_image_url removed — now on character
+                :featured_date,
+                :solution_en, :solution_fr, :solution_es, :solution_de, :solution_it, :solution_pt
 
   index do
     selectable_column
     id_column
     column :solution do |puzzle|
-      truncate(puzzle.solution, length: 50)
+      truncate(puzzle.solution_for('en'), length: 50)
+    end
+    column "Languages" do |puzzle|
+      puzzle.available_locales.join(', ').upcase
     end
     column :anime
     column :character
@@ -29,20 +31,31 @@ ActiveAdmin.register Puzzle do
     actions
   end
 
-  # ✅ Only filter on ransackable_attributes defined in the model
   filter :difficulty
   filter :topic
   filter :featured_date
   filter :created_at
-  # ❌ filter :anime — causes Ransack issues, use the select below instead
-  # ❌ filter :character — same reason
+  filter :default_locale
 
   form do |f|
     f.inputs 'Puzzle Content' do
-      f.input :solution,
-              label: 'Quote Text',
-              hint: 'Enter the original anime quote (cipher will be auto-generated)',
-              input_html: { rows: 3 }
+      # ✅ English (required)
+      f.input :solution_en,
+              label: 'Quote Text (English)',
+              hint: 'Enter the original anime quote in English (cipher will be auto-generated)',
+              input_html: { rows: 3, value: f.object.solution_for('en') }
+
+      # ✅ French (optional)
+      f.input :solution_fr,
+              label: 'Quote Text (French)',
+              hint: 'Optional: Enter the French translation (no accents, uppercase)',
+              input_html: { rows: 3, value: f.object.solution_for('fr') }
+
+      # ✅ Spanish (optional)
+      f.input :solution_es,
+              label: 'Quote Text (Spanish)',
+              hint: 'Optional: Enter the Spanish translation',
+              input_html: { rows: 3, value: f.object.solution_for('es') }
 
       f.input :anime,
               label: 'Anime/Manga Source',
@@ -80,8 +93,6 @@ ActiveAdmin.register Puzzle do
     end
 
     f.inputs 'Media URLs' do
-      # ❌ background_image_url removed — comes from anime.image_url
-      # ❌ character_image_url removed — comes from character.image_url
       f.input :video_url, label: 'Video URL (optional)'
       f.input :video_thumbnail_url, label: 'Video Thumbnail URL (optional)'
       f.input :video_duration, label: 'Video Duration (seconds)'
@@ -96,11 +107,80 @@ ActiveAdmin.register Puzzle do
     f.actions
   end
 
+  # ✅ Custom controller to handle multilanguage form submission
+  controller do
+    def create
+      @puzzle = Puzzle.new(puzzle_params)
+
+      # Build solutions hash from form inputs
+      solutions_hash = {}
+      solutions_hash['en'] = params[:puzzle][:solution_en].strip.upcase if params[:puzzle][:solution_en].present?
+      solutions_hash['fr'] = params[:puzzle][:solution_fr].strip.upcase if params[:puzzle][:solution_fr].present?
+      solutions_hash['es'] = params[:puzzle][:solution_es].strip.upcase if params[:puzzle][:solution_es].present?
+      solutions_hash['de'] = params[:puzzle][:solution_de].strip.upcase if params[:puzzle][:solution_de].present?
+      solutions_hash['it'] = params[:puzzle][:solution_it].strip.upcase if params[:puzzle][:solution_it].present?
+      solutions_hash['pt'] = params[:puzzle][:solution_pt].strip.upcase if params[:puzzle][:solution_pt].present?
+
+      @puzzle.solutions = solutions_hash
+      @puzzle.default_locale = 'en'
+
+      if @puzzle.save
+        redirect_to admin_puzzle_path(@puzzle), notice: 'Puzzle was successfully created.'
+      else
+        render :new
+      end
+    end
+
+    def update
+      @puzzle = Puzzle.find(params[:id])
+
+      # Build solutions hash from form inputs
+      solutions_hash = @puzzle.solutions || {}
+      solutions_hash['en'] = params[:puzzle][:solution_en].strip.upcase if params[:puzzle][:solution_en].present?
+      solutions_hash['fr'] = params[:puzzle][:solution_fr].strip.upcase if params[:puzzle][:solution_fr].present?
+      solutions_hash['es'] = params[:puzzle][:solution_es].strip.upcase if params[:puzzle][:solution_es].present?
+      solutions_hash['de'] = params[:puzzle][:solution_de].strip.upcase if params[:puzzle][:solution_de].present?
+      solutions_hash['it'] = params[:puzzle][:solution_it].strip.upcase if params[:puzzle][:solution_it].present?
+      solutions_hash['pt'] = params[:puzzle][:solution_pt].strip.upcase if params[:puzzle][:solution_pt].present?
+
+      @puzzle.solutions = solutions_hash
+      @puzzle.assign_attributes(puzzle_params)
+
+      # Regenerate ciphers for all languages
+      @puzzle.send(:generate_all_ciphers)
+      @puzzle.send(:generate_all_hints)
+
+      if @puzzle.save
+        redirect_to admin_puzzle_path(@puzzle), notice: 'Puzzle was successfully updated.'
+      else
+        render :edit
+      end
+    end
+
+    private
+
+    def puzzle_params
+      params.require(:puzzle).permit(
+        :topic, :difficulty, :artwork, :points,
+        :anime_id, :character_id, :author_id,
+        :video_url, :video_thumbnail_url, :video_duration,
+        :featured_date
+      )
+    end
+  end
+
   show do
     attributes_table do
       row :id
-      row :solution
-      row :encrypted_text
+      row "English Solution" do |puzzle|
+        puzzle.solution_for('en')
+      end
+      row "French Solution" do |puzzle|
+        puzzle.solution_for('fr') if puzzle.locale_available?('fr')
+      end
+      row "Available Languages" do |puzzle|
+        puzzle.available_locales.join(', ').upcase
+      end
       row :anime
       row :character
       row :author
@@ -115,31 +195,24 @@ ActiveAdmin.register Puzzle do
       row :difficulty
       row :points
 
-      row 'Cipher Preview' do |puzzle|
-        table do
-          thead { tr { th 'Original'; th 'Encrypted' } }
-          tbody { tr { td puzzle.solution; td puzzle.encrypted_text } }
-        end
-      end
-
-      row 'Starting Letters' do |puzzle|
-        puzzle.starting_letters.map { |sl| "#{sl['actual']} → #{sl['encrypted']}" }.join(', ')
-      end
-
-      row 'Cipher Mapping' do |puzzle|
-        table do
-          thead { tr { th 'Letter'; th 'Encrypts to' } }
-          tbody do
-            puzzle.cipher_mapping.each do |original, encrypted|
-              tr { td original; td encrypted }
-            end
+      # ✅ Show cipher preview for each language
+      panel "Cipher Previews (All Languages)" do
+        puzzle.available_locales.each do |locale|
+          h4 "#{locale.upcase} Version"
+          table do
+            thead { tr { th 'Original'; th 'Encrypted' } }
+            tbody { tr { td puzzle.solution_for(locale); td puzzle.encrypted_text_for(locale) } }
           end
         end
       end
 
-      row 'Generated Hints' do |puzzle|
+      row 'Starting Letters (EN)' do |puzzle|
+        puzzle.starting_letters_for('en').map { |sl| "#{sl['actual']} → #{sl['encrypted']}" }.join(', ')
+      end
+
+      row 'Hints (EN)' do |puzzle|
         ul do
-          puzzle.hints.each do |hint|
+          puzzle.hints_for('en').each do |hint|
             li "#{hint['type']}: #{hint['letter'] || hint['word']} (cost: #{hint['cost']})"
           end
         end
