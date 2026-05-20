@@ -4,15 +4,22 @@ class Puzzle < ApplicationRecord
   belongs_to :character, optional: true
   belongs_to :author, optional: true
 
-  # Callbacks - Auto-generate cipher when puzzle is created
+  # ✅ Callbacks - Auto-generate cipher when puzzle is created
+  before_create :normalize_solution
   before_create :generate_cipher_and_encrypt
   before_create :select_starting_letters
   before_create :generate_hints
 
-  # Validations
+  # ✅ Validations
   validates :solution, presence: true, length: { minimum: 10, maximum: 300 }
   validates :difficulty, inclusion: { in: %w[easy medium hard] }
   validates :points, numericality: { greater_than: 0 }
+
+  # ✅ Allow letters, numbers, spaces, and punctuation: . , ' ! ?
+  validates :solution, format: {
+    with: /\A[A-Z0-9\s\.\,\'\!\?]+\z/,
+    message: "can only contain letters, numbers, spaces, and punctuation (.,\'!?)"
+  }
 
   # Scopes
   scope :by_difficulty, ->(diff) { where(difficulty: diff) }
@@ -23,7 +30,7 @@ class Puzzle < ApplicationRecord
   def self.ransackable_attributes(auth_object = nil)
     [
       "solution", "topic", "difficulty", "artwork", "featured_date",
-      "anime_id", "character_id", "author_id",  # Add foreign keys!
+      "anime_id", "character_id", "author_id",
       "created_at", "updated_at", "points"
     ]
   end
@@ -33,6 +40,11 @@ class Puzzle < ApplicationRecord
   end
 
   private
+
+  # ✅ Normalize solution: uppercase and trim
+  def normalize_solution
+    self.solution = solution.strip.upcase if solution.present?
+  end
 
   # Generate cipher mapping and encrypt text
   def generate_cipher_and_encrypt
@@ -58,26 +70,23 @@ class Puzzle < ApplicationRecord
 
   # Generate hint structure
   def generate_hints
-    letter_hints = []
-    word_hints = []
+    # Get unique letters from solution (ignore punctuation)
+    unique_letters = solution.scan(/[A-Z]/).uniq
 
-    # Get unique letters from solution
-    unique_letters = solution.upcase.scan(/[A-Z]/).uniq
-
-    # Create reveal_letter hints for most common letters
-    letter_frequency = solution.upcase.scan(/[A-Z]/).tally.sort_by { |k, v| -v }
-    letter_frequency.first(5).each do |letter, _count|
-      letter_hints << {
+    # Create letter hints for most common letters
+    letter_frequency = solution.scan(/[A-Z]/).tally.sort_by { |k, v| -v }
+    letter_hints = letter_frequency.first(5).map do |letter, _count|
+      {
         type: 'reveal_letter',
         letter: letter,
         cost: 10
       }
     end
 
-    # Create reveal_word hints for words with 4+ letters
-    words = solution.upcase.scan(/[A-Z]+/).select { |w| w.length >= 4 }
-    words.uniq.first(3).each do |word|
-      word_hints << {
+    # Create word hints for words with 4+ letters (ignore punctuation)
+    words = solution.scan(/[A-Z]+/).select { |w| w.length >= 4 }
+    word_hints = words.uniq.first(3).map do |word|
+      {
         type: 'reveal_word',
         word: word,
         cost: 25

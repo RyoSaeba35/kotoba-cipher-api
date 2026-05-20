@@ -74,6 +74,7 @@ class CsvImportService
     { count: count, message: message }
   end
 
+  # app/services/csv_import_service.rb
   def self.import_puzzles(file_path)
     count = 0
     skipped = 0
@@ -91,23 +92,25 @@ class CsvImportService
       character = Character.find_by(name: row['character_name'])
       author    = row['author_name'].present? ? Author.find_by(name: row['author_name']) : nil
 
-      existing = Puzzle.find_by(solution: row['solution'].upcase, anime: anime)
+      # ✅ Normalize solution (model will handle it in before_create, but check here for duplicates)
+      normalized_solution = row['solution'].strip.upcase
+
+      existing = Puzzle.find_by(solution: normalized_solution, anime: anime)
       if existing
         skipped += 1
         next
       end
 
+      # ✅ Model callbacks will auto-generate cipher, starting letters, and hints
       Puzzle.create!(
-        solution:    row['solution'].upcase,
-        anime:       anime,
-        character:   character,
-        author:      author,
-        topic:       row['topic'],
-        difficulty:  row['difficulty'],
-        points:      row['points'].to_i,
-        artwork:     row['artwork'],
-        # ← background_image_url removed (now on anime)
-        # ← character_image_url removed (now on character)
+        solution:      row['solution'],  # ✅ Pass as-is, model normalizes it
+        anime:         anime,
+        character:     character,
+        author:        author,
+        topic:         row['topic'],
+        difficulty:    row['difficulty'] || 'medium',
+        points:        row['points'].to_i.positive? ? row['points'].to_i : 100,
+        artwork:       row['artwork'],
         video_url:     row['video_url'],
         featured_date: row['featured_date'].present? ? Date.parse(row['featured_date']) : nil
       )
