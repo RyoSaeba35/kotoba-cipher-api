@@ -164,11 +164,13 @@ ActiveAdmin.register_page "CSV Import" do
     # Export methods
     def export_authors
       CSV.generate(headers: true) do |csv|
-        csv << ['name', 'bio', 'image_url', 'wikipedia_url']
+        csv << ['name', 'bio_en', 'bio_fr', 'bio_es', 'image_url', 'wikipedia_url']
         Author.find_each do |author|
           csv << [
             author.name,
-            author.bio,
+            author.bios['en'] || author.bio,
+            author.bios['fr'],
+            author.bios['es'],
             author.image_url,
             author.wikipedia_url
           ]
@@ -178,18 +180,38 @@ ActiveAdmin.register_page "CSV Import" do
 
     def export_animes
       CSV.generate(headers: true) do |csv|
-        csv << ['title', 'title_japanese', 'creator', 'studio', 'year', 'anime_type', 'image_url']
+        csv << ['title', 'title_fr', 'title_es', 'title_japanese', 'creator', 'studio', 'year', 'anime_type', 'image_url']
         Anime.find_each do |anime|
-          csv << [anime.title, anime.title_japanese, anime.creator, anime.studio, anime.year, anime.anime_type, anime.image_url]
+          csv << [
+            anime.title,
+            anime.titles['fr'],
+            anime.titles['es'],
+            anime.title_japanese,
+            anime.creator,
+            anime.studio,
+            anime.year,
+            anime.anime_type,
+            anime.image_url
+          ]
         end
       end
     end
 
     def export_characters
       CSV.generate(headers: true) do |csv|
-        csv << ['name', 'name_japanese', 'anime_title', 'voice_actor', 'voice_actor_japanese', 'bio', 'image_url']
+        csv << ['name', 'name_fr', 'name_es', 'name_japanese', 'anime_title', 'voice_actor', 'voice_actor_japanese', 'bio', 'image_url']
         Character.includes(:anime).find_each do |character|
-          csv << [character.name, character.name_japanese, character.anime&.title, character.voice_actor, character.voice_actor_japanese, character.bio, character.image_url]
+          csv << [
+            character.name,
+            character.names['fr'],
+            character.names['es'],
+            character.name_japanese,
+            character.anime&.title,
+            character.voice_actor,
+            character.voice_actor_japanese,
+            character.bio,
+            character.image_url
+          ]
         end
       end
     end

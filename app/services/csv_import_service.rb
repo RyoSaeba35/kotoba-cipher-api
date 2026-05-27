@@ -30,9 +30,16 @@ class CsvImportService
     count = 0
     CSV.foreach(file_path, headers: true) do |row|
       Author.find_or_create_by!(name: row['name']) do |author|
-        author.bio           = row['bio']
+        author.bio           = row['bio'] || row['bio_en']
         author.image_url     = row['image_url']
         author.wikipedia_url = row['wikipedia_url']
+
+        bios = {}
+        bios['en'] = row['bio_en'].strip if row['bio_en'].present?
+        bios['fr'] = row['bio_fr'].strip if row['bio_fr'].present?
+        bios['es'] = row['bio_es'].strip if row['bio_es'].present?
+        author.bios = bios if bios.any?
+
         count += 1
       end
     end
@@ -49,6 +56,12 @@ class CsvImportService
         anime.year           = row['year'].to_i
         anime.anime_type     = row['anime_type']
         anime.image_url      = row['image_url']
+
+        titles = {}
+        titles['fr'] = row['title_fr'].strip if row['title_fr'].present?
+        titles['es'] = row['title_es'].strip if row['title_es'].present?
+        anime.titles = titles if titles.any?
+
         count += 1
       end
     end
@@ -61,7 +74,6 @@ class CsvImportService
 
     CSV.foreach(file_path, headers: true) do |row|
       anime = Anime.find_by(title: row['anime_title'])
-
       unless anime
         skipped += 1
         next
@@ -73,6 +85,12 @@ class CsvImportService
         character.voice_actor_japanese = row['voice_actor_japanese']
         character.bio                  = row['bio']
         character.image_url            = row['image_url']
+
+        names = {}
+        names['fr'] = row['name_fr'].strip if row['name_fr'].present?
+        names['es'] = row['name_es'].strip if row['name_es'].present?
+        character.names = names if names.any?
+
         count += 1
       end
     end
