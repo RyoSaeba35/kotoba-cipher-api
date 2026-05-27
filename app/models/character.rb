@@ -10,6 +10,13 @@ class Character < ApplicationRecord
     names[locale.to_s] || names['en'] || name
   end
 
+  def all_names
+    result = names.presence || {}
+    # Always include English from the `name` column if missing
+    result = result.merge('en' => name) if result['en'].blank? && name.present?
+    result
+  end
+
   # ✅ Check if locale is available
   def locale_available?(locale)
     names.present? && names.key?(locale.to_s)

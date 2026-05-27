@@ -139,10 +139,10 @@ module Api
 
           topic: puzzle.topic,
 
-          character_names: puzzle.character&.names || {},
+          character_names: puzzle.character&.all_names || {},
           character_japanese: puzzle.character&.name_japanese,
-          anime_titles: puzzle.anime&.titles || {},
-          anime_japanese: puzzle.anime&.title_japanese, 
+          anime_titles: puzzle.anime&.all_titles || {},
+          anime_japanese: puzzle.anime&.title_japanese,
 
           author: puzzle.author ? {
             name: puzzle.author.name,

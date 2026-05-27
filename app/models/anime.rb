@@ -31,6 +31,13 @@ class Anime < ApplicationRecord
     save!
   end
 
+  # app/models/anime.rb
+  def all_titles
+    result = titles.presence || {}
+    result = result.merge('en' => title) if result['en'].blank? && title.present?
+    result
+  end
+
   # Ransack configuration
   def self.ransackable_attributes(auth_object = nil)
     ["title", "title_japanese", "creator", "studio", "year", "anime_type", "created_at", "updated_at"]
