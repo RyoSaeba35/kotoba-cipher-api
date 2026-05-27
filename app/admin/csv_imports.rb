@@ -67,13 +67,15 @@ ActiveAdmin.register_page "CSV Import" do
 
     begin
       result = CsvImportService.import(file.path, file_type)
-      errors_preview = Array(result[:errors]).first(4).join(" | ")
+      Rails.logger.info("[CSV Import] #{file_type}: #{result[:count]} imported. Errors: #{Array(result[:errors]).join(' | ')}")
 
-      redirect_to admin_csv_import_path,
-                  notice: "Imported #{result[:count]} #{file_type}. Errors: #{errors_preview}"
+      msg = "✅ Imported #{result[:count]} #{file_type}."
+      msg += " #{result[:errors].count} error(s) — check server logs." if result[:errors]&.any?
+
+      redirect_to admin_csv_import_path, notice: msg
     rescue => e
-      redirect_to admin_csv_import_path,
-                  alert: "❌ Import failed: #{e.message}"
+      Rails.logger.error("[CSV Import] Failed: #{e.message}")
+      redirect_to admin_csv_import_path, alert: "❌ Import failed: #{e.message.truncate(200)}"
     end
   end
 

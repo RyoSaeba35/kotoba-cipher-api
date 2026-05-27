@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_27_103446) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_27_105505) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,7 +96,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_103446) do
     t.jsonb "hints", default: []
     t.jsonb "hints_i18n", default: {}
     t.integer "points", default: 100
-    t.text "solution", null: false
+    t.text "solution"
     t.jsonb "solutions", default: {}
     t.jsonb "starting_letters", default: []
     t.jsonb "starting_letters_i18n", default: {}
