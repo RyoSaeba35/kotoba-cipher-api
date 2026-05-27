@@ -19,6 +19,13 @@ class CsvImportService
 
   private
 
+  def self.normalize(str)
+    result = str.strip.upcase
+                .unicode_normalize(:nfc)
+    result = ActiveSupport::Inflector.transliterate(result)
+    result.gsub(/[^\x00-\x7F]/, '')  # strip any remaining non-ASCII
+  end
+
   def self.import_authors(file_path)
     count = 0
     CSV.foreach(file_path, headers: true) do |row|
@@ -97,28 +104,29 @@ class CsvImportService
 
       # English (required)
       if row['solution_en'].present?
-        solutions_hash['en'] = row['solution_en'].strip.upcase
-      elsif row['solution'].present?  # Backwards compatibility
-        solutions_hash['en'] = row['solution'].strip.upcase
+        solutions_hash['en'] = normalize(row['solution_en'])
+      elsif row['solution'].present?
+        solutions_hash['en'] = normalize(row['solution'])
       else
         errors << "Line #{line_number}: Missing English solution"
         next
       end
 
       # French (optional)
-      solutions_hash['fr'] = row['solution_fr'].strip.upcase if row['solution_fr'].present?
+      solutions_hash['fr'] = normalize(row['solution_fr']) if row['solution_fr'].present?
 
       # Spanish (optional)
-      solutions_hash['es'] = row['solution_es'].strip.upcase if row['solution_es'].present?
+      solutions_hash['es'] = normalize(row['solution_es']) if row['solution_es'].present?
 
       # German (optional)
-      solutions_hash['de'] = row['solution_de'].strip.upcase if row['solution_de'].present?
+      solutions_hash['de'] = normalize(row['solution_de']) if row['solution_de'].present?
 
       # Italian (optional)
-      solutions_hash['it'] = row['solution_it'].strip.upcase if row['solution_it'].present?
+      solutions_hash['it'] = normalize(row['solution_it']) if row['solution_it'].present?
 
       # Portuguese (optional)
-      solutions_hash['pt'] = row['solution_pt'].strip.upcase if row['solution_pt'].present?
+      solutions_hash['pt'] = normalize(row['solution_pt']) if row['solution_pt'].present?
+
 
       # Check for duplicates (use English solution)
       existing = Puzzle.find_by("solutions->>'en' = ?", solutions_hash['en'])

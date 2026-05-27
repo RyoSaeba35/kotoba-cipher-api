@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_20_152101) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_27_103446) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -114,6 +114,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_152101) do
     t.index ["difficulty"], name: "index_puzzles_on_difficulty"
     t.index ["featured_date"], name: "index_puzzles_on_featured_date"
     t.index ["solutions"], name: "index_puzzles_on_solutions", using: :gin
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "data"
+    t.string "session_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["session_id"], name: "index_sessions_on_session_id", unique: true
+    t.index ["updated_at"], name: "index_sessions_on_updated_at"
   end
 
   add_foreign_key "characters", "animes"

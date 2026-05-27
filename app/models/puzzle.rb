@@ -20,7 +20,8 @@ class Puzzle < ApplicationRecord
 
   validates :solution, format: {
     with: /\A[A-Z0-9\s\.\,\'\!\?\-]+\z/,  # ✅ Added \- for hyphen
-    message: "can only contain letters, numbers, spaces, and punctuation (.,\'!?-)"
+    message: "can only contain letters, numbers, spaces, and punctuation (.,\'!?-)",
+    allow_blank: true
   }
 
   # Scopes

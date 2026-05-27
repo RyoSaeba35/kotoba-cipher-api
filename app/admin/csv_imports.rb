@@ -67,13 +67,13 @@ ActiveAdmin.register_page "CSV Import" do
 
     begin
       result = CsvImportService.import(file.path, file_type)
-      msg = result[:message].present? ? " #{result[:message].truncate(300)}" : ""
+      errors_preview = Array(result[:errors]).first(4).join(" | ")
 
       redirect_to admin_csv_import_path,
-                  notice: "✅ Successfully imported #{result[:count]} #{file_type}!#{msg}"
+                  notice: "Imported #{result[:count]} #{file_type}. Errors: #{errors_preview}"
     rescue => e
       redirect_to admin_csv_import_path,
-                  alert: "❌ Import failed: #{e.message}".truncate(300)
+                  alert: "❌ Import failed: #{e.message}"
     end
   end
 

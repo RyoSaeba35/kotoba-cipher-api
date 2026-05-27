@@ -17,3 +17,5 @@ production:
   url: <%= ENV['DATABASE_URL'] %>
   pool: 5
   checkout_timeout: 5
+  prepared_statements: false
+  advisory_locks: false
