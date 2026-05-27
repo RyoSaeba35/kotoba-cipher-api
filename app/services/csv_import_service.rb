@@ -148,8 +148,8 @@ class CsvImportService
     end
 
     message  = skipped > 0 ? "(#{skipped} skipped)" : ""
-    message += " Errors: #{errors.join(', ')}" if errors.any?
+    message += " #{errors.count} error(s)." if errors.any?
 
-    { count: count, message: message }
+    { count: count, message: message, errors: errors }
   end
 end
