@@ -1,6 +1,6 @@
 # app/models/author.rb
 class Author < ApplicationRecord
-  has_many :puzzles
+  has_many :puzzles, dependent: :nullify
 
   validates :name, presence: true
 

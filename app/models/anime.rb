@@ -1,7 +1,7 @@
 # app/models/anime.rb
 class Anime < ApplicationRecord
-  has_many :puzzles
-  has_many :characters
+  has_many :puzzles, dependent: :nullify
+  has_many :characters, dependent: :nullify
 
   validates :title, presence: true, uniqueness: true
   validates :anime_type, inclusion: { in: %w[anime manga] }

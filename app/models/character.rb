@@ -1,7 +1,7 @@
 # app/models/character.rb
 class Character < ApplicationRecord
   belongs_to :anime
-  has_many :puzzles
+  has_many :puzzles, dependent: :nullify
 
   validates :name, presence: true
 
