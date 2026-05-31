@@ -71,8 +71,8 @@ module Api
         end
 
         puzzles = Puzzle.includes(:anime, :character, :author)
-                        .where('updated_at > ?', updated_since)
-                        .order(:updated_at)
+                        .where('puzzles.updated_at > ?', updated_since)  # ✅ qualify with table name
+                        .order('puzzles.updated_at')                      # ✅ qualify here too
 
         render json: {
           puzzles: puzzles.map { |p| puzzle_json(p, 'all') },
