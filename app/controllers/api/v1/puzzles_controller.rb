@@ -64,19 +64,22 @@ module Api
       end
 
       def sync
-        updated_since = params[:updated_since].present? ? Time.parse(params[:updated_since]) : 1.week.ago
+        updated_since = begin
+          Time.parse(params[:updated_since])
+        rescue ArgumentError, TypeError
+          1.week.ago
+        end
 
         puzzles = Puzzle.includes(:anime, :character, :author)
                         .where('updated_at > ?', updated_since)
                         .order(:updated_at)
-                        # .limit(50)
 
         render json: {
           puzzles: puzzles.map { |p| puzzle_json(p, 'all') },
           meta: {
             count: puzzles.size,
             synced_at: Time.now.utc.iso8601,
-            last_updated_at: puzzles.maximum(:updated_at)&.iso8601
+            last_updated_at: puzzles.any? ? puzzles.maximum(:updated_at)&.iso8601 : nil
           }
         }
       end
