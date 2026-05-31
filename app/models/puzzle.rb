@@ -12,6 +12,7 @@ class Puzzle < ApplicationRecord
   before_create :normalize_solutions
   before_create :generate_all_ciphers
   before_create :generate_all_hints
+  before_save :regenerate_ciphers_if_solutions_changed
 
   # ✅ Validations
   validates :default_locale, inclusion: { in: SUPPORTED_LOCALES }
@@ -181,5 +182,31 @@ class Puzzle < ApplicationRecord
     end
 
     letter_hints + word_hints
+  end
+
+  def regenerate_ciphers_if_solutions_changed
+    return unless solutions_changed?
+
+    solutions.each do |locale, solution_text|
+      cipher = CipherGenerator.generate
+      encrypted = CipherGenerator.encrypt(solution_text, cipher)
+      count = case difficulty
+              when 'easy' then 3
+              when 'medium' then 2
+              when 'hard' then 1
+              else 2
+              end
+      starting = StartingLetterSelector.select(
+        solution: solution_text,
+        count: count,
+        cipher_mapping: cipher
+      )
+      hints = generate_hints_for_solution(solution_text)
+
+      self.encrypted_texts = (encrypted_texts || {}).merge(locale => encrypted)
+      self.cipher_mappings_i18n = (cipher_mappings_i18n || {}).merge(locale => cipher)
+      self.starting_letters_i18n = (starting_letters_i18n || {}).merge(locale => starting)
+      self.hints_i18n = (hints_i18n || {}).merge(locale => hints)
+    end
   end
 end
