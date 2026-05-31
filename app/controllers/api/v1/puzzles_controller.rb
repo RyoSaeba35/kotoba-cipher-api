@@ -63,6 +63,23 @@ module Api
         }
       end
 
+      def sync
+        updated_since = params[:updated_since].present? ? Time.parse(params[:updated_since]) : 1.week.ago
+
+        puzzles = Puzzle.includes(:anime, :character, :author)
+                        .where('updated_at > ?', updated_since)
+                        .order(:updated_at)
+                        .limit(50)
+
+        render json: {
+          puzzles: puzzles.map { |p| puzzle_json(p, 'all') },
+          meta: {
+            count: puzzles.size,
+            synced_at: Time.now.utc.iso8601,
+          }
+        }
+      end
+
       private
 
       def puzzle_json(puzzle, locale = 'en')

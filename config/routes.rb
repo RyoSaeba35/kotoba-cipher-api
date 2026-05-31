@@ -9,6 +9,7 @@ Rails.application.routes.draw do
         collection do
           get :daily
           get :bundle
+          get 'bundle/sync', to: 'puzzles#sync'
         end
       end
     end
