@@ -69,7 +69,7 @@ module Api
         puzzles = Puzzle.includes(:anime, :character, :author)
                         .where('updated_at > ?', updated_since)
                         .order(:updated_at)
-                        .limit(50)
+                        # .limit(50)
 
         render json: {
           puzzles: puzzles.map { |p| puzzle_json(p, 'all') },
