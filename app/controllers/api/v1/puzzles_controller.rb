@@ -76,6 +76,7 @@ module Api
           meta: {
             count: puzzles.size,
             synced_at: Time.now.utc.iso8601,
+            last_updated_at: puzzles.maximum(:updated_at)&.iso8601
           }
         }
       end
