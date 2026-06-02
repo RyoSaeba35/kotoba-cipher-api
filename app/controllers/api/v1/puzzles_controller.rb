@@ -24,40 +24,39 @@ module Api
       end
 
       def daily
-        locale = params[:locale] || 'en'
-        today  = Date.current
+        today = begin
+          params[:date].present? ? Date.parse(params[:date]) : Date.current
+        rescue ArgumentError
+          Date.current
+        end
 
+        # Pool is always all puzzles — locale only affects the JSON shape
         pool = Puzzle.includes(:anime, :character, :author)
-                    .by_locale(locale)
                     .order(:id)
                     .to_a
 
         if pool.empty?
-          render json: { error: "No puzzles available for locale: #{locale}" }, status: :not_found
+          render json: { error: 'No puzzles available' }, status: :not_found
           return
         end
 
-        # Epoch day = days since a fixed start date
-        # This gives a continuously incrementing day index across years
-        epoch     = Date.new(2026, 1, 1)
-        day_index = (today - epoch).to_i   # 0, 1, 2, 3...
+        epoch        = Date.new(2026, 1, 1)
+        day_index    = (today - epoch).to_i
+        cycle_number = day_index / pool.size
+        position     = day_index % pool.size
+        shuffled     = pool.shuffle(random: Random.new(cycle_number))
+        puzzle       = shuffled[position]
 
-        # Which cycle are we in, and which position within it?
-        cycle_number   = day_index / pool.size   # 0 for first 150 days, 1 for next 150...
-        position       = day_index % pool.size   # 0–149
-
-        # Shuffle differently each cycle so order never repeats across cycles
-        shuffled = pool.shuffle(random: Random.new(cycle_number))
-
-        puzzle = shuffled[position]
+        # locale param only controls response format (single locale or all)
+        locale = params[:locale] || 'en'
 
         render json: {
           puzzle:     puzzle_json(puzzle, locale),
           daily_meta: {
-            date:          today.iso8601,
-            expires_at:    Time.current.end_of_day.utc.iso8601,
-            cycle:         cycle_number + 1,        # optional, nice for debugging
-            pool_size:     pool.size,
+            date:       today.iso8601,
+            expires_at: Time.current.end_of_day.utc.iso8601,
+            cycle:      cycle_number + 1,
+            pool_size:  pool.size,
           }
         }
       end
