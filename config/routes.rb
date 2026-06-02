@@ -12,6 +12,7 @@ Rails.application.routes.draw do
           get 'bundle/sync', to: 'puzzles#sync'
         end
       end
+      post 'device_tokens', to: 'device_tokens#upsert'
     end
   end
 

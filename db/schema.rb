@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_27_105505) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_02_094956) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,6 +78,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_105505) do
     t.string "voice_actor_japanese"
     t.index ["anime_id"], name: "index_characters_on_anime_id"
     t.index ["names"], name: "index_characters_on_names", using: :gin
+  end
+
+  create_table "device_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_active_at"
+    t.string "locale", default: "en", null: false
+    t.string "platform", default: "android", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token"], name: "index_device_tokens_on_token", unique: true
   end
 
   create_table "puzzles", force: :cascade do |t|
