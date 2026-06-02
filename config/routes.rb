@@ -14,9 +14,11 @@ Rails.application.routes.draw do
       end
       post "device_tokens", to: "device_tokens#upsert"
 
-      post :daily_challenge, to: "jobs#daily_challenge"
-      post :streak_reminder, to: "jobs#streak_reminder"
-      post :re_engagement,   to: "jobs#re_engagement"
+      scope "/jobs" do
+        post :daily_challenge, to: "jobs#daily_challenge"
+        post :streak_reminder, to: "jobs#streak_reminder"
+        post :re_engagement,   to: "jobs#re_engagement"
+      end
     end
   end
 
