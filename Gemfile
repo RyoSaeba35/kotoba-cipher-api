@@ -74,4 +74,7 @@ end
 
 gem "dockerfile-rails", ">= 1.7", group: :development
 
-gem 'googleauth'
+gem "googleauth"
+
+# For scheduling background jobs (e.g. daily notifications)
+gem "whenever", require: false
