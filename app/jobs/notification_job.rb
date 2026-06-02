@@ -9,8 +9,8 @@ class NotificationJob
       user_time = Time.current.in_time_zone(device.timezone || 'Europe/Paris')
       next unless user_time.hour == target_hour
 
-      title = device.locale == 'fr' ? '🎌 Défi du jour disponible !' : '🎌 Daily challenge is ready!'
-      body  = device.locale == 'fr' ? 'Un nouveau chiffre vous attend' : 'A new cipher is waiting for you'
+      title = device.locale == 'fr' ? 'Défi du jour disponible !' : 'Daily challenge is ready!'
+      body  = device.locale == 'fr' ? 'Un nouveau cipher vous attend' : 'A new cipher is waiting for you'
 
       success = FcmService.send_notification(
         token: device.token,
@@ -61,8 +61,8 @@ class NotificationJob
       user_time = Time.current.in_time_zone(device.timezone || 'Europe/Paris')
       next unless user_time.hour == target_hour
 
-      title = device.locale == 'fr' ? '👋 Vous nous manquez !' : '👋 We miss you!'
-      body  = device.locale == 'fr' ? 'Revenez résoudre le chiffre anime du jour' : 'Come back and solve today\'s anime cipher'
+      title = device.locale == 'fr' ? 'Vous nous manquez !' : 'We miss you!'
+      body  = device.locale == 'fr' ? 'Revenez résoudre le cipher anime du jour' : 'Come back and solve today\'s anime cipher'
 
       success = FcmService.send_notification(
         token: device.token,
