@@ -7,6 +7,7 @@ module Api
         token.update!(
           platform:       params[:platform] || 'android',
           locale:         params[:locale]   || 'en',
+          timezone:       params[:timezone] || 'Europe/Paris',
           last_active_at: Time.current,
         )
         render json: { status: 'ok' }
