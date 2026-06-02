@@ -27,9 +27,14 @@ class NotificationJob
   def self.streak_reminder
     Rails.logger.info "📬 Sending streak reminders..."
     count = 0
-    target_hour = 21  # 9pm user local time
+    target_hour = 21
+    today_start = Time.current.beginning_of_day
 
-    DeviceToken.where('last_active_at > ?', 7.days.ago).find_each do |device|
+    DeviceToken
+      .where('last_active_at > ?', 7.days.ago)
+      .where('last_daily_completed_at IS NULL OR last_daily_completed_at < ?', today_start)
+      .find_each do |device|
+
       user_time = Time.current.in_time_zone(device.timezone || 'Europe/Paris')
       next unless user_time.hour == target_hour
 

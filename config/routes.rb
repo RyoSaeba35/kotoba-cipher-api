@@ -13,6 +13,7 @@ Rails.application.routes.draw do
         end
       end
       post "device_tokens", to: "device_tokens#upsert"
+      post "device_tokens/complete_daily", to: "device_tokens#complete_daily"
 
       scope "/jobs" do
         post :daily_challenge, to: "jobs#daily_challenge"

@@ -14,6 +14,12 @@ module Api
       rescue => e
         render json: { error: e.message }, status: :unprocessable_entity
       end
+
+      def complete_daily
+        token = DeviceToken.find_by(token: params[:token])
+        token&.update(last_daily_completed_at: Time.current)
+        render json: { status: 'ok' }
+      end
     end
   end
 end
