@@ -24,7 +24,6 @@ class StartingLetterSelector
     letters = text.upcase.scan(/[A-Z]/)
     frequency = letters.tally
 
-    # Sort by frequency (descending)
     frequency.sort_by { |letter, count| -count }.to_h
   end
 end

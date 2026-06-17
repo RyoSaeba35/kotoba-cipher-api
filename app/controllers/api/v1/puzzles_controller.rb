@@ -2,24 +2,20 @@
 module Api
   module V1
     class PuzzlesController < ApplicationController
-      # GET /api/v1/puzzles?locale=fr
       def index
         locale = params[:locale] || 'en'
 
-        @puzzles = Puzzle.includes(:anime, :character, :author)
+        @puzzles = Puzzle.includes(:work, :character, :author)
                          .recent
                          .limit(25)
 
-        # ✅ Return all puzzles with automatic fallback
         render json: @puzzles.map { |p| puzzle_json(p, locale) }
       end
 
-      # GET /api/v1/puzzles/:id?locale=fr
       def show
         locale = params[:locale] || 'en'
-        @puzzle = Puzzle.includes(:anime, :character, :author).find(params[:id])
+        @puzzle = Puzzle.includes(:work, :character, :author).find(params[:id])
 
-        # ✅ No error - automatic fallback to available locale
         render json: puzzle_json(@puzzle, locale)
       end
 
@@ -30,8 +26,7 @@ module Api
           Date.current
         end
 
-        # Pool is always all puzzles — locale only affects the JSON shape
-        pool = Puzzle.includes(:anime, :character, :author)
+        pool = Puzzle.includes(:work, :character, :author)
                     .order(:id)
                     .to_a
 
@@ -47,7 +42,6 @@ module Api
         shuffled     = pool.shuffle(random: Random.new(cycle_number))
         puzzle       = shuffled[position]
 
-        # locale param only controls response format (single locale or all)
         locale = params[:locale] || 'en'
 
         render json: {
@@ -61,13 +55,11 @@ module Api
         }
       end
 
-      # GET /api/v1/puzzles/bundle?locale=fr
-      # GET /api/v1/puzzles/bundle?locale=all (returns all languages)
       def bundle
         locale = params[:locale] || 'en'
         limit = [params[:limit].to_i.positive? ? params[:limit].to_i : 25, 25].min
 
-        puzzles = Puzzle.includes(:anime, :character, :author).order(:id)
+        puzzles = Puzzle.includes(:work, :character, :author).order(:id)
         puzzles = puzzles.where('id > ?', params[:after_id].to_i) if params[:after_id].present?
 
         total_remaining = puzzles.count
@@ -80,7 +72,7 @@ module Api
             has_more: total_remaining > limit,
             next_after_id: page.last&.id,
             total_available: Puzzle.count,
-            requested_locale: locale  # ✅ What user asked for
+            requested_locale: locale
           }
         }
       end
@@ -92,9 +84,9 @@ module Api
           1.week.ago
         end
 
-        puzzles = Puzzle.includes(:anime, :character, :author)
-                        .where('puzzles.updated_at > ?', updated_since)  # ✅ qualify with table name
-                        .order('puzzles.updated_at')                      # ✅ qualify here too
+        puzzles = Puzzle.includes(:work, :character, :author)
+                        .where('puzzles.updated_at > ?', updated_since)
+                        .order('puzzles.updated_at')
 
         render json: {
           puzzles: puzzles.map { |p| puzzle_json(p, 'all') },
@@ -117,7 +109,6 @@ module Api
       end
 
       def puzzle_json_single_locale(puzzle, locale)
-        # ✅ Determine actual locale used (with fallback)
         actual_locale = puzzle.locale_available?(locale) ? locale : (puzzle.locale_available?('en') ? 'en' : puzzle.available_locales.first)
 
         {
@@ -125,7 +116,6 @@ module Api
           date: puzzle.featured_date,
           difficulty: puzzle.difficulty,
 
-          # ✅ Show what was requested vs what was returned
           requested_locale: locale,
           actual_locale: actual_locale,
           available_locales: puzzle.available_locales,
@@ -135,10 +125,10 @@ module Api
           topic: puzzle.topic,
 
           character: puzzle.character&.name_for(locale),
-          character_japanese: puzzle.character&.name_japanese,
-          artwork: puzzle.artwork.presence || puzzle.anime&.title_for(locale),
-          anime_title: puzzle.anime&.title_for(locale),
-          anime_japanese: puzzle.anime&.title_japanese,
+          character_original: puzzle.character&.name_original,
+          artwork: puzzle.artwork.presence || puzzle.work&.title_for(locale),
+          work_title: puzzle.work&.title_for(locale),
+          work_original: puzzle.work&.title_original,
 
           author: puzzle.author ? {
             name: puzzle.author.name,
@@ -148,7 +138,7 @@ module Api
           } : nil,
 
           media: {
-            background_image: puzzle.anime&.image_url || '',
+            background_image: puzzle.work&.image_url || '',
             character_image: puzzle.character&.image_url || '',
             video: {
               url: puzzle.video_url || '',
@@ -174,7 +164,7 @@ module Api
           difficulty: puzzle.difficulty,
           available_locales: puzzle.available_locales,
 
-          # ✅ All languages - NO solutions included!
+          # All languages - NO solutions included
           encrypted_texts: puzzle.encrypted_texts,
           cipher_mappings: puzzle.cipher_mappings_i18n,
           starting_letters: puzzle.starting_letters_i18n,
@@ -183,9 +173,9 @@ module Api
           topic: puzzle.topic,
 
           character_names: puzzle.character&.all_names || {},
-          character_japanese: puzzle.character&.name_japanese,
-          anime_titles: puzzle.anime&.all_titles || {},
-          anime_japanese: puzzle.anime&.title_japanese,
+          character_original: puzzle.character&.name_original,
+          work_titles: puzzle.work&.all_titles || {},
+          work_original: puzzle.work&.title_original,
 
           author: puzzle.author ? {
             name: puzzle.author.name,
@@ -195,7 +185,7 @@ module Api
           } : nil,
 
           media: {
-            background_image: puzzle.anime&.image_url || '',
+            background_image: puzzle.work&.image_url || '',
             character_image: puzzle.character&.image_url || '',
             video: {
               url: puzzle.video_url || '',

@@ -6,8 +6,8 @@ class CsvImportService
     case type
     when 'authors'
       import_authors(file_path)
-    when 'animes'
-      import_animes(file_path)
+    when 'works'
+      import_works(file_path)
     when 'characters'
       import_characters(file_path)
     when 'puzzles'
@@ -23,7 +23,7 @@ class CsvImportService
     result = str.strip.upcase
                 .unicode_normalize(:nfc)
     result = ActiveSupport::Inflector.transliterate(result)
-    result.gsub(/[^\x00-\x7F]/, '')  # strip any remaining non-ASCII
+    result.gsub(/[^\x00-\x7F]/, '')  # strip any non-ASCII
   end
 
   def self.import_authors(file_path)
@@ -46,21 +46,21 @@ class CsvImportService
     { count: count, message: "" }
   end
 
-  def self.import_animes(file_path)
+  def self.import_works(file_path)
     count = 0
     CSV.foreach(file_path, headers: true) do |row|
-      Anime.find_or_create_by!(title: row['title']) do |anime|
-        anime.title_japanese = row['title_japanese']
-        anime.creator        = row['creator']
-        anime.studio         = row['studio']
-        anime.year           = row['year'].to_i
-        anime.anime_type     = row['anime_type']
-        anime.image_url      = row['image_url']
+      Work.find_or_create_by!(title: row['title']) do |work|
+        work.title_original = row['title_original']
+        work.creator        = row['creator']
+        work.studio         = row['studio']
+        work.year           = row['year'].to_i
+        work.work_type     = row['work_type']
+        work.image_url      = row['image_url']
 
         titles = {}
         titles['fr'] = row['title_fr'].strip if row['title_fr'].present?
         titles['es'] = row['title_es'].strip if row['title_es'].present?
-        anime.titles = titles if titles.any?
+        work.titles = titles if titles.any?
 
         count += 1
       end
@@ -73,16 +73,16 @@ class CsvImportService
     skipped = 0
 
     CSV.foreach(file_path, headers: true) do |row|
-      anime = Anime.find_by(title: row['anime_title'])
-      unless anime
+      work = Work.find_by(title: row['work_title'])
+      unless work
         skipped += 1
         next
       end
 
-      Character.find_or_create_by!(name: row['name'], anime: anime) do |character|
-        character.name_japanese        = row['name_japanese']
+      Character.find_or_create_by!(name: row['name'], work: work) do |character|
+        character.name_original        = row['name_original']
         character.voice_actor          = row['voice_actor']
-        character.voice_actor_japanese = row['voice_actor_japanese']
+        character.voice_actor_original = row['voice_actor_original']
         character.bio                  = row['bio']
         character.image_url            = row['image_url']
 
@@ -95,32 +95,31 @@ class CsvImportService
       end
     end
 
-    message = skipped > 0 ? "(#{skipped} skipped - anime not found)" : ""
+    message = skipped > 0 ? "(#{skipped} skipped - work not found)" : ""
     { count: count, message: message }
   end
 
-  # ✅ UPDATED: Multilanguage support
+  # Multilanguage support
   def self.import_puzzles(file_path)
     count = 0
     skipped = 0
     errors = []
 
     CSV.foreach(file_path, headers: true).with_index(2) do |row, line_number|
-      anime = Anime.find_by(title: row['anime_title'])
+      work = Work.find_by(title: row['work_title'])
 
-      unless anime
+      unless work
         skipped += 1
-        errors << "Line #{line_number}: Anime '#{row['anime_title']}' not found"
+        errors << "Line #{line_number}: Work '#{row['work_title']}' not found"
         next
       end
 
       character = Character.find_by(name: row['character_name'])
       author    = row['author_name'].present? ? Author.find_by(name: row['author_name']) : nil
 
-      # ✅ Build solutions hash from CSV columns
+      # Build solutions hash from CSV columns
       solutions_hash = {}
 
-      # English (required)
       if row['solution_en'].present?
         solutions_hash['en'] = normalize(row['solution_en'])
       elsif row['solution'].present?
@@ -130,33 +129,28 @@ class CsvImportService
         next
       end
 
-      # French (optional)
       solutions_hash['fr'] = normalize(row['solution_fr']) if row['solution_fr'].present?
 
-      # Spanish (optional)
       solutions_hash['es'] = normalize(row['solution_es']) if row['solution_es'].present?
 
-      # German (optional)
       solutions_hash['de'] = normalize(row['solution_de']) if row['solution_de'].present?
 
-      # Italian (optional)
       solutions_hash['it'] = normalize(row['solution_it']) if row['solution_it'].present?
 
-      # Portuguese (optional)
       solutions_hash['pt'] = normalize(row['solution_pt']) if row['solution_pt'].present?
 
 
-      # Check for duplicates (use English solution)
+      # Check for duplicates
       existing = Puzzle.find_by("solutions->>'en' = ?", solutions_hash['en'])
-      if existing && existing.anime_id == anime.id
+      if existing && existing.work_id == work.id
         skipped += 1
         next
       end
 
-      # ✅ Create puzzle with multilanguage solutions
+      # Create puzzle with multilanguage solutions
       Puzzle.create!(
-        solutions:     solutions_hash,  # ✅ JSONB with all languages
-        anime:         anime,
+        solutions:     solutions_hash,
+        work:          work,
         character:     character,
         author:        author,
         topic:         row['topic'],

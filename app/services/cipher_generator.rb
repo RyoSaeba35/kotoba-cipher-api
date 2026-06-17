@@ -16,7 +16,7 @@ class CipherGenerator
     ALPHABET.zip(shuffled).to_h
   end
 
-  # Encrypt text using cipher mapping
+  # Encrypt text
   def self.encrypt(text, cipher_mapping)
     text.upcase.chars.map do |char|
       # Encrypt letters, keep spaces and punctuation
@@ -28,7 +28,7 @@ class CipherGenerator
     end.join
   end
 
-  # Decrypt text (reverse the mapping)
+  # Decrypt text
   def self.decrypt(encrypted_text, cipher_mapping)
     reverse_mapping = cipher_mapping.invert
 

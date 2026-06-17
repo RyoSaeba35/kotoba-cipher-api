@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_132801) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_120317) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,20 +40,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_132801) do
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
   end
 
-  create_table "animes", force: :cascade do |t|
-    t.string "anime_type"
-    t.datetime "created_at", null: false
-    t.string "creator"
-    t.string "image_url"
-    t.string "studio"
-    t.string "title"
-    t.string "title_japanese"
-    t.jsonb "titles", default: {}
-    t.datetime "updated_at", null: false
-    t.integer "year"
-    t.index ["titles"], name: "index_animes_on_titles", using: :gin
-  end
-
   create_table "authors", force: :cascade do |t|
     t.text "bio"
     t.jsonb "bios", default: {}
@@ -66,18 +52,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_132801) do
   end
 
   create_table "characters", force: :cascade do |t|
-    t.bigint "anime_id", null: false
     t.text "bio"
     t.datetime "created_at", null: false
     t.string "image_url"
     t.string "name"
-    t.string "name_japanese"
+    t.string "name_original"
     t.jsonb "names", default: {}
     t.datetime "updated_at", null: false
     t.string "voice_actor"
     t.string "voice_actor_japanese"
-    t.index ["anime_id"], name: "index_characters_on_anime_id"
+    t.bigint "work_id", null: false
     t.index ["names"], name: "index_characters_on_names", using: :gin
+    t.index ["work_id"], name: "index_characters_on_work_id"
   end
 
   create_table "device_tokens", force: :cascade do |t|
@@ -93,7 +79,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_132801) do
   end
 
   create_table "puzzles", force: :cascade do |t|
-    t.bigint "anime_id", null: false
     t.string "artwork"
     t.bigint "author_id"
     t.bigint "character_id"
@@ -118,7 +103,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_132801) do
     t.integer "video_duration"
     t.string "video_thumbnail_url"
     t.string "video_url"
-    t.index ["anime_id"], name: "index_puzzles_on_anime_id"
+    t.bigint "work_id", null: false
     t.index ["author_id"], name: "index_puzzles_on_author_id"
     t.index ["character_id"], name: "index_puzzles_on_character_id"
     t.index ["created_at"], name: "index_puzzles_on_created_at"
@@ -126,6 +111,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_132801) do
     t.index ["difficulty"], name: "index_puzzles_on_difficulty"
     t.index ["featured_date"], name: "index_puzzles_on_featured_date"
     t.index ["solutions"], name: "index_puzzles_on_solutions", using: :gin
+    t.index ["work_id"], name: "index_puzzles_on_work_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -137,8 +123,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_132801) do
     t.index ["updated_at"], name: "index_sessions_on_updated_at"
   end
 
-  add_foreign_key "characters", "animes"
-  add_foreign_key "puzzles", "animes"
+  create_table "works", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "creator"
+    t.string "image_url"
+    t.string "studio"
+    t.string "title"
+    t.string "title_original"
+    t.jsonb "titles", default: {}
+    t.datetime "updated_at", null: false
+    t.string "work_type"
+    t.integer "year"
+    t.index ["titles"], name: "index_works_on_titles", using: :gin
+  end
+
+  add_foreign_key "characters", "works"
   add_foreign_key "puzzles", "authors"
   add_foreign_key "puzzles", "characters"
+  add_foreign_key "puzzles", "works"
 end

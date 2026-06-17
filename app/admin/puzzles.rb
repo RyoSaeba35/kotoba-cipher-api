@@ -3,13 +3,12 @@ ActiveAdmin.register Puzzle do
 
   controller do
     def scoped_collection
-      super.includes(:anime, :character, :author)
+      super.includes(:work, :character, :author)
     end
   end
 
-  # ✅ Add multilanguage fields to permit_params
   permit_params :solution, :topic, :difficulty, :artwork, :points,
-                :anime_id, :character_id, :author_id,
+                :work_id, :character_id, :author_id,
                 :video_url, :video_thumbnail_url, :video_duration,
                 :featured_date,
                 :solution_en, :solution_fr, :solution_es, :solution_de, :solution_it, :solution_pt
@@ -23,7 +22,7 @@ ActiveAdmin.register Puzzle do
     column "Languages" do |puzzle|
       puzzle.available_locales.join(', ').upcase
     end
-    column :anime
+    column :work
     column :character
     column :difficulty
     column :featured_date
@@ -39,34 +38,31 @@ ActiveAdmin.register Puzzle do
 
   form do |f|
     f.inputs 'Puzzle Content' do
-      # ✅ English (required)
       f.input :solution_en,
               label: 'Quote Text (English)',
-              hint: 'Enter the original anime quote in English (cipher will be auto-generated)',
+              hint: 'Enter the original work quote in English (cipher will be auto-generated)',
               input_html: { rows: 3, value: f.object.solution_for('en') }
 
-      # ✅ French (optional)
       f.input :solution_fr,
               label: 'Quote Text (French)',
               hint: 'Optional: Enter the French translation (no accents, uppercase)',
               input_html: { rows: 3, value: f.object.solution_for('fr') }
 
-      # ✅ Spanish (optional)
       f.input :solution_es,
               label: 'Quote Text (Spanish)',
               hint: 'Optional: Enter the Spanish translation',
               input_html: { rows: 3, value: f.object.solution_for('es') }
 
-      f.input :anime,
-              label: 'Anime/Manga Source',
+      f.input :work,
+              label: 'Work Source',
               as: :select,
-              collection: Anime.all.order(:title).map { |a| [a.title, a.id] },
-              include_blank: 'Select anime...'
+              collection: Work.all.order(:title).map { |w| [w.title, w.id] },
+              include_blank: 'Select work...'
 
       f.input :character,
               label: 'Character (optional)',
               as: :select,
-              collection: Character.includes(:anime).order(:name).map { |c| ["#{c.name} (#{c.anime.title})", c.id] },
+              collection: Character.includes(:work).order(:name).map { |c| ["#{c.name} (#{c.work.title})", c.id] },
               include_blank: 'Select character...'
 
       f.input :author,
@@ -107,12 +103,10 @@ ActiveAdmin.register Puzzle do
     f.actions
   end
 
-  # ✅ Custom controller to handle multilanguage form submission
   controller do
     def create
       @puzzle = Puzzle.new(puzzle_params)
 
-      # Build solutions hash from form inputs
       solutions_hash = {}
       solutions_hash['en'] = params[:puzzle][:solution_en].strip.upcase if params[:puzzle][:solution_en].present?
       solutions_hash['fr'] = params[:puzzle][:solution_fr].strip.upcase if params[:puzzle][:solution_fr].present?
@@ -134,7 +128,6 @@ ActiveAdmin.register Puzzle do
     def update
       @puzzle = Puzzle.find(params[:id])
 
-      # Build solutions hash from form inputs
       solutions_hash = @puzzle.solutions || {}
       solutions_hash['en'] = params[:puzzle][:solution_en].strip.upcase if params[:puzzle][:solution_en].present?
       solutions_hash['fr'] = params[:puzzle][:solution_fr].strip.upcase if params[:puzzle][:solution_fr].present?
@@ -146,7 +139,6 @@ ActiveAdmin.register Puzzle do
       @puzzle.solutions = solutions_hash
       @puzzle.assign_attributes(puzzle_params)
 
-      # Regenerate ciphers for all languages
       @puzzle.send(:generate_all_ciphers)
       @puzzle.send(:generate_all_hints)
 
@@ -162,7 +154,7 @@ ActiveAdmin.register Puzzle do
     def puzzle_params
       params.require(:puzzle).permit(
         :topic, :difficulty, :artwork, :points,
-        :anime_id, :character_id, :author_id,
+        :work_id, :character_id, :author_id,
         :video_url, :video_thumbnail_url, :video_duration,
         :featured_date
       )
@@ -181,21 +173,20 @@ ActiveAdmin.register Puzzle do
       row "Available Languages" do |puzzle|
         puzzle.available_locales.join(', ').upcase
       end
-      row :anime
+      row :work
       row :character
       row :author
       row 'Character Image' do |puzzle|
         image_tag(puzzle.character.image_url, height: 80) if puzzle.character&.image_url.present?
       end
-      row 'Anime Cover' do |puzzle|
-        image_tag(puzzle.anime.image_url, height: 80) if puzzle.anime&.image_url.present?
+      row 'Work Cover' do |puzzle|
+        image_tag(puzzle.work.image_url, height: 80) if puzzle.work&.image_url.present?
       end
       row :artwork
       row :topic
       row :difficulty
       row :points
 
-      # ✅ Show cipher preview for each language
       panel "Cipher Previews (All Languages)" do
         puzzle.available_locales.each do |locale|
           h4 "#{locale.upcase} Version"

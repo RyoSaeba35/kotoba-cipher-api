@@ -21,7 +21,7 @@ class NotificationJob
       count += 1 if success
     end
 
-    Rails.logger.info "✅ Daily challenge: sent #{count} notifications"
+    Rails.logger.info "Daily challenge: sent #{count} notifications"
   end
 
   def self.streak_reminder
@@ -50,13 +50,13 @@ class NotificationJob
       count += 1 if success
     end
 
-    Rails.logger.info "✅ Streak reminder: sent #{count} notifications"
+    Rails.logger.info "Streak reminder: sent #{count} notifications"
   end
 
   def self.re_engagement
     Rails.logger.info "📬 Sending re-engagement notifications..."
     count = 0
-    target_hour = 10  # 10am user local time
+    target_hour = 10
 
     DeviceToken
       .where('last_active_at < ?', 3.days.ago)
@@ -67,7 +67,7 @@ class NotificationJob
       next unless user_time.hour == target_hour
 
       title = device.locale == 'fr' ? 'Vous nous manquez !' : 'We miss you!'
-      body  = device.locale == 'fr' ? 'Revenez résoudre le cipher anime du jour' : 'Come back and solve today\'s anime cipher'
+      body  = device.locale == 'fr' ? 'Revenez résoudre le cipher du jour' : 'Come back and solve today\'s cipher'
 
       success = FcmService.send_notification(
         token: device.token,
@@ -78,6 +78,6 @@ class NotificationJob
       count += 1 if success
     end
 
-    Rails.logger.info "✅ Re-engagement: sent #{count} notifications"
+    Rails.logger.info "Re-engagement: sent #{count} notifications"
   end
 end

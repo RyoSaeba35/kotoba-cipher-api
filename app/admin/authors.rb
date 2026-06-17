@@ -57,14 +57,13 @@ ActiveAdmin.register Author do
     def create
       @author = Author.new(author_params)
 
-      # Build bios hash from form inputs
       bios_hash = {}
       bios_hash['en'] = params[:author][:bio_en].strip if params[:author][:bio_en].present?
       bios_hash['fr'] = params[:author][:bio_fr].strip if params[:author][:bio_fr].present?
       bios_hash['es'] = params[:author][:bio_es].strip if params[:author][:bio_es].present?
 
       @author.bios = bios_hash
-      @author.bio = bios_hash['en'] || bios_hash.values.first # Set old column for backwards compat
+      @author.bio = bios_hash['en'] || bios_hash.values.first
 
       if @author.save
         redirect_to admin_author_path(@author), notice: 'Author was successfully created.'
@@ -76,7 +75,6 @@ ActiveAdmin.register Author do
     def update
       @author = Author.find(params[:id])
 
-      # Build bios hash from form inputs
       bios_hash = @author.bios || {}
       bios_hash['en'] = params[:author][:bio_en].strip if params[:author][:bio_en].present?
       bios_hash['fr'] = params[:author][:bio_fr].strip if params[:author][:bio_fr].present?

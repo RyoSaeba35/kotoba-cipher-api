@@ -82,7 +82,7 @@
   <div style="margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 6px;">
     <strong>📥 Download Templates:</strong><br>
     <%= link_to "authors_template.csv", admin_csv_import_download_template_path(type: 'authors') %> |
-    <%= link_to "animes_template.csv", admin_csv_import_download_template_path(type: 'animes') %> |
+    <%= link_to "works_template.csv", admin_csv_import_download_template_path(type: 'works') %> |
     <%= link_to "characters_template.csv", admin_csv_import_download_template_path(type: 'characters') %> |
     <%= link_to "puzzles_template.csv", admin_csv_import_download_template_path(type: 'puzzles') %>
   </div>
@@ -105,20 +105,20 @@
     <% end %>
   </div>
 
-  <!-- Animes Upload/Export -->
+  <!-- Works Upload/Export -->
   <div class="upload-section">
     <%= form_tag admin_csv_import_upload_path, multipart: true do %>
-      <h3><span class="icon">📺</span> Import Animes</h3>
+      <h3><span class="icon">📺</span> Import Works</h3>
       <p class="description">
-        Upload a CSV file containing anime/manga information (title, creator, studio, year, type)
+        Upload a CSV file containing works information (title, creator, studio, year, type)
       </p>
       <div class="file-input-wrapper">
         <%= file_field_tag :csv_file, accept: '.csv' %>
-        <%= hidden_field_tag :file_type, 'animes' %>
+        <%= hidden_field_tag :file_type, 'works' %>
       </div>
       <div class="button-group">
-        <%= submit_tag 'Upload Animes', class: 'btn-upload' %>
-        <%= link_to '📥 Export Current Animes', admin_csv_import_export_path(type: 'animes'), class: 'btn-export' %>
+        <%= submit_tag 'Upload Works', class: 'btn-upload' %>
+        <%= link_to '📥 Export Current Works', admin_csv_import_export_path(type: 'works'), class: 'btn-export' %>
       </div>
     <% end %>
   </div>
@@ -128,8 +128,8 @@
     <%= form_tag admin_csv_import_upload_path, multipart: true do %>
       <h3><span class="icon">👥</span> Import Characters</h3>
       <p class="description">
-        Upload a CSV file containing character information (name, anime_title, voice_actor)
-        <br><strong>Note:</strong> Animes must be imported first!
+        Upload a CSV file containing character information (name, work_title, voice_actor)
+        <br><strong>Note:</strong> Works must be imported first!
       </p>
       <div class="file-input-wrapper">
         <%= file_field_tag :csv_file, accept: '.csv' %>
@@ -147,8 +147,8 @@
     <%= form_tag admin_csv_import_upload_path, multipart: true do %>
       <h3><span class="icon">🧩</span> Import Puzzles</h3>
       <p class="description">
-        Upload a CSV file containing puzzle information (solution, anime_title, character_name, difficulty)
-        <br><strong>Note:</strong> Animes and Characters must be imported first!
+        Upload a CSV file containing puzzle information (solution, work_title, character_name, difficulty)
+        <br><strong>Note:</strong> Works and Characters must be imported first!
       </p>
       <div class="file-input-wrapper">
         <%= file_field_tag :csv_file, accept: '.csv' %>
@@ -164,5 +164,5 @@
 
 <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 6px;">
   <strong>💡 Pro Tip:</strong> Export your current data, edit it in Google Sheets or Excel,
-  then re-import to bulk update. Import in order: Authors → Animes → Characters → Puzzles
+  then re-import to bulk update. Import in order: Authors → Works → Characters → Puzzles
 </div>

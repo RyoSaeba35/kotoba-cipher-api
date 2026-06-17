@@ -43,7 +43,6 @@ class FcmService
       true
     else
       Rails.logger.error "❌ FCM failed: #{response.code} #{response.body}"
-      # Remove invalid token
       if response.body.include?('UNREGISTERED') || response.body.include?('INVALID_ARGUMENT')
         DeviceToken.find_by(token: token)&.destroy
         Rails.logger.info "🗑️ Removed invalid token"
