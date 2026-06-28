@@ -81,10 +81,10 @@ belongs_to :work
 
     # Select starting letters
     count = case difficulty
-            when 'easy' then 3
-            when 'medium' then 2
-            when 'hard' then 1
-            else 2
+            when 'easy' then 5
+            when 'medium' then 4
+            when 'hard' then 3
+            else 4
     end
 
     starting = StartingLetterSelector.select(
@@ -126,10 +126,10 @@ belongs_to :work
       encrypted = CipherGenerator.encrypt(solution_text, cipher)
 
       count = case difficulty
-              when 'easy' then 3
-              when 'medium' then 2
-              when 'hard' then 1
-              else 2
+              when 'easy' then 5
+              when 'medium' then 4
+              when 'hard' then 3
+              else 4
       end
 
       starting = StartingLetterSelector.select(
@@ -174,10 +174,10 @@ belongs_to :work
       cipher = CipherGenerator.generate
       encrypted = CipherGenerator.encrypt(solution_text, cipher)
       count = case difficulty
-              when 'easy' then 3
-              when 'medium' then 2
-              when 'hard' then 1
-              else 2
+              when 'easy' then 5
+              when 'medium' then 4
+              when 'hard' then 3
+              else 4
       end
       starting = StartingLetterSelector.select(
         solution: solution_text,
