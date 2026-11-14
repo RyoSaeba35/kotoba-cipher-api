@@ -6,6 +6,9 @@ if [ -z "${LD_PRELOAD+x}" ]; then
     export LD_PRELOAD
 fi
 
-# Add any container initialization steps here
+# Run pending migrations when starting the web server (replaces Fly's release_command)
+if [ "$1" == "./bin/rails" ] && [ "$2" == "server" ]; then
+  ./bin/rails db:migrate
+fi
 
 exec "${@}"
